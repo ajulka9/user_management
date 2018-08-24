@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  h1= title
+  p #{user} Welcome to the Secure page.
+  ul
+    li Create Users <a href="/secure/addUser">Create User</a>
+    li Delete Users <a href="/secure/getAllUsers">Get All Users</a>
+    li Delete Users <a href="/secure/deleteUser">Delete User</a>

@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  h1= title
+  form#formAddUser(name="login",method="post",action="/userLogin")
+    p
+      label Username
+      input(type='text', name='username')
+    p
+      label Password
+      input(type='password', name='password')
+    input(type='submit')
+    - each message in flash
+      h4(style="color:red;") #{message}
+    p Please <a href="/register">Register</a> Here!

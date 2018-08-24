@@ -1,0 +1,13 @@
+extends layout
+
+block content
+    script(src="/javascripts/users.js")
+    h1= title
+    form#formAddUser(name="adduser",method="post",action="/secure/addUser")
+        p
+          input#inputFirstName(type="text", placeholder="First name", name="firstName")
+        p
+          input#inputLastName(type="text", placeholder="Last name", name="lastName")
+        p
+          input#inputEmail(type="text", placeholder="email", name="email")
+        button#btnSubmit(type="submit") submit
