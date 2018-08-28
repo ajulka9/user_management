@@ -1,0 +1,17 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")
+        meta(name="viewport", content="width=device-width, initial-scale=1")
+block content
+    script(src="/javascripts/Duo-Web-v2.js")
+    script(src="/javascripts/secure.js")
+    script(src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js")
+    h1= title
+    iframe(id="duo_iframe", title="Two Factor Authentication", data-host=host,
+    data-init-txid="xwe",
+    data-post-argument="from_duo",
+    data-submit-callback="/fromDuo",
+    data-sig-request=sign)

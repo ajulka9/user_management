@@ -1,7 +1,8 @@
 var express = require('express');
 var http = require('http');
 var router = express.Router();
-var mock = require('../mock/mock_data.js')
+var mock = require('../mock/mock_data.json')
+var Duo = require('../public/javascripts/Duo-Web-v2')
 
 
 
@@ -12,6 +13,131 @@ router.get('/', function (req, res, next) {
 router.get('/addUser', function(req, res, next) {
     res.render('addUser', { title: 'Add User' });
 });
+
+
+function initiateSecondFactor(req,  res, success, failure) {
+    console.log("Initiate Second factor for User !!");
+
+    login = {
+        'username': req.query.user,
+        'factorType': 'secondary',
+        'scenario': 'register'
+    };
+
+    var options = {
+        host: 'localhost',
+        port: '8080',
+        path: '/myapp/login',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+
+    // Set up the request
+    var post_req = http.request(options, function (res1) {
+        res1.setEncoding('utf8');
+        res1.on('data', function (chunk) {
+            console.log('Response: ' + chunk);
+            success(req, res, chunk)
+        });
+        res1.on('error', function (e) {
+            console.log('problem with request: ' + e.message);
+            failure(req, res, e);
+        });
+    });
+
+    // post the data
+    post_req.write(JSON.stringify(login));
+    return post_req.end();
+}
+
+function finishSecondFactor(req,  res, success, failure) {
+    console.log("Initiate Second factor for User !!");
+
+    login = {
+        'signRequest': req.body.from_duo,
+        'factorType': 'secondary',
+        'scenario': 'verify'
+    };
+
+    var options = {
+        host: 'localhost',
+        port: '8080',
+        path: '/myapp/login',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+
+    // Set up the request
+    var post_req = http.request(options, function (res1) {
+        res1.setEncoding('utf8');
+        res1.on('data', function (chunk) {
+            console.log('Response: ' + chunk);
+            success(req, res, chunk)
+        });
+        res1.on('error', function (e) {
+            console.log('problem with request: ' + e.message);
+            failure(req, res, e);
+        });
+    });
+
+    // post the data
+    post_req.write(JSON.stringify(login));
+    return post_req.end();
+}
+
+function submitPostAction(){
+    console.log('Submit post action.');
+}
+
+
+
+// window.addEventListener('DOMContentLoaded', initDuoFrame({
+//     host:'xyz',
+//     signRequest: 'abc'
+// }), false);
+
+
+
+var loginSuccess = function (req, res, data) {
+    console.log("Second Factor success!!");
+    console.log(data)
+    req.session.authenticated = true;
+    if(data){
+        parsed = JSON.parse(data);
+        if(parsed['scenario'] == 'register') {
+            signature = parsed['signature'];
+            host = parsed['host'];
+            console.log(signature);
+            console.log(host);
+            res.render('2FA', {title: '2FA Login - Duo', host: host, sign: signature});
+        }
+        else{
+            console.log('DUO Status : '+ parsed['mfaResponse']);
+            res.render('secure', {title: 'Welcome '+ parsed['mfaResponse'] + ' You have successfully validated your second factor with Duo.'});
+        }
+    }
+    else{
+        req.flash('error', 'Error with the LoginHandler');
+        // redirect back to the login page.
+        res.redirect('/login');
+    }
+    // res.statusCode = 200;
+    // res.write(data);
+    // res.end();
+    // res.render('2FA', { title: '2FA Login - Duo'});
+    // initiateSecondFactor(req, res, loginSuccess, loginFailure);
+};
+
+var loginFailure = function(req, res, data) {
+    console.log("Second Factor failed!!");
+    console.log(data)
+    // redirect back to the login page.
+    res.redirect('/login');
+};
 
 function getAllUsers(mocked, success, failure){
     if(mock){
@@ -30,7 +156,6 @@ function getAllUsers(mocked, success, failure){
             'Content-Type': 'application/json'
         }
     };
-
 
     // Set up the request
     var post_req = http.request(options, function(res) {
@@ -84,6 +209,7 @@ router.get('/getAllUsers', function(req, res, next){
         res.status(400).send(error);
     })
 });
+
 /* POST users listing. */
 router.post('/addUser', function(req, res, next) {
     console.log("POST Add user");
@@ -104,6 +230,30 @@ router.post('/addUser', function(req, res, next) {
         console.log("User not created");
         res.status(400).send(data);
     });
+});
+
+/* POST From IFRAME */
+router.post('/2fa', function(req, res, next) {
+    console.log("POST hook from the DUO frame");
+    console.log(req.body);
+    finishSecondFactor(req,res,loginSuccess,loginFailure);
+    // var respBody = {from_duo:req.body.from_duo};
+    // res.statusCode = 200;
+    // res.write(JSON.stringify(respBody))
+    // res.end();
+});
+
+
+
+/* 2fa Page. */
+router.get('/2fa', function(req, res, next) {
+    console.log("Loading the 2fa page: " + req.query.user);
+    // initDuoFrame({
+    //     host:'xyz',
+    //     signRequest: 'abc'
+    // });
+    initiateSecondFactor(req,res,loginSuccess,loginFailure)
+
 });
 
 /* GET users listing. */
