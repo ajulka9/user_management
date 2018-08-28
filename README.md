@@ -1,1 +1,1 @@
-User Management project
+User Management Console project
