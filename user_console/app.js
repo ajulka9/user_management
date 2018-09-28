@@ -21,7 +21,11 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser("Welcome1"));
-app.use(session());
+app.use(session({
+	secret: "Welcome1",
+	saveUninitialized: true,
+	resave:true
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(checkAuth);
 app.use(flash());
